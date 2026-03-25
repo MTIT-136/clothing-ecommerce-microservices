@@ -1,0 +1,17 @@
+{
+  "name": "clothing-ecommerce-microservices",
+  "private": true,
+  "workspaces": [
+    "api-gateway",
+    "user-service",
+    "product-service",
+    "cart-service",
+    "order-service",
+    "payment-service",
+    "inventory-service"
+  ],
+  "scripts": {
+    "start": "node api-gateway/server.js",
+    "start:all": "echo \"Start services individually: npm --workspace <service> start\""
+  }
+}
