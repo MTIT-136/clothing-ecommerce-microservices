@@ -5,13 +5,6 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const sampleRoutes = require("./routes/sampleRoutes");
 
-const userServiceUrl = process.env.USER_SERVICE_URL || "http://localhost:3001";
-const productServiceUrl = process.env.PRODUCT_SERVICE_URL || "http://localhost:3002";
-const cartServiceUrl = process.env.CART_SERVICE_URL || "http://localhost:3003";
-const orderServiceUrl = process.env.ORDER_SERVICE_URL || "http://localhost:3004";
-const paymentServiceUrl = process.env.PAYMENT_SERVICE_URL || "http://localhost:3005";
-const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || "http://localhost:3006";
-
 function createApp() {
   const app = express();
 
@@ -19,16 +12,14 @@ function createApp() {
   app.use(express.json());
   app.use(morgan("dev"));
 
+  // Simple gateway-level route
   app.use("/", sampleRoutes);
 
-  app.get("/api/orders/api-docs", (req, res) => {
-    res.redirect("/api/orders/api-docs/");
-  });
-
+  // Proxy routes to microservices (strip the /api/<service> prefix)
   app.use(
     "/api/users",
     createProxyMiddleware({
-      target: userServiceUrl,
+      target: "http://localhost:3001",
       changeOrigin: true,
       pathRewrite: { "^/api/users": "" },
     })
@@ -36,31 +27,15 @@ function createApp() {
   app.use(
     "/api/products",
     createProxyMiddleware({
-      target: productServiceUrl,
+      target: "http://localhost:3002",
       changeOrigin: true,
       pathRewrite: { "^/api/products": "" },
     })
   );
   app.use(
-    "/api/cart/api-docs",
-    createProxyMiddleware({
-      target: cartServiceUrl,
-      changeOrigin: true,
-      pathRewrite: { "^/api/cart/api-docs": "/api-docs" },
-      on: {
-        proxyRes(proxyRes) {
-          const redirectLocation = proxyRes.headers.location;
-          if (redirectLocation && redirectLocation.startsWith("/api-docs")) {
-            proxyRes.headers.location = `/api/cart${redirectLocation}`;
-          }
-        },
-      },
-    })
-  );
-  app.use(
     "/api/cart",
     createProxyMiddleware({
-      target: cartServiceUrl,
+      target: "http://localhost:3003",
       changeOrigin: true,
       pathRewrite: { "^/api/cart": "" },
     })
@@ -68,7 +43,7 @@ function createApp() {
   app.use(
     "/api/orders",
     createProxyMiddleware({
-      target: orderServiceUrl,
+      target: "http://localhost:3004",
       changeOrigin: true,
       pathRewrite: { "^/api/orders": "" },
       on: {
@@ -84,7 +59,7 @@ function createApp() {
   app.use(
     "/api/payments",
     createProxyMiddleware({
-      target: paymentServiceUrl,
+      target: "http://localhost:3005",
       changeOrigin: true,
       pathRewrite: { "^/api/payments": "" },
     })
@@ -92,7 +67,7 @@ function createApp() {
   app.use(
     "/api/inventory",
     createProxyMiddleware({
-      target: inventoryServiceUrl,
+      target: "http://localhost:3006",
       changeOrigin: true,
       pathRewrite: { "^/api/inventory": "" },
     })
@@ -102,3 +77,5 @@ function createApp() {
 }
 
 module.exports = createApp;
+
+
