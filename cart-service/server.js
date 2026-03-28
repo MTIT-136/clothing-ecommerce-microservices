@@ -5,12 +5,15 @@ const createApp = require("./app");
 
 const port = Number(process.env.PORT) || 3003;
 const serviceName = process.env.SERVICE_NAME || "cart-service";
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 async function start() {
-  if (!process.env.MONGODB_URI) {
-    console.warn(`[${serviceName}] MONGODB_URI not set. Skipping MongoDB connection.`);
+  if (!mongoUri) {
+    console.warn(
+      `[${serviceName}] MONGO_URI/MONGODB_URI not set. Skipping MongoDB connection.`
+    );
   } else {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(mongoUri);
     console.log(`[${serviceName}] MongoDB connected`);
   }
 
