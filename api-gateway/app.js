@@ -46,6 +46,14 @@ function createApp() {
       target: "http://localhost:3004",
       changeOrigin: true,
       pathRewrite: { "^/api/orders": "" },
+      on: {
+        proxyRes(proxyRes) {
+          const location = proxyRes.headers.location;
+          if (location && location.startsWith("/")) {
+            proxyRes.headers.location = `/api/orders${location}`;
+          }
+        },
+      },
     })
   );
   app.use(
@@ -69,4 +77,5 @@ function createApp() {
 }
 
 module.exports = createApp;
+
 
