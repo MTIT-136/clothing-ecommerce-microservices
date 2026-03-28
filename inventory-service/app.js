@@ -1,20 +1,27 @@
 const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
 
-const sampleRoutes = require("./routes/sampleRoutes");
+const { setupSwagger } = require("./config/swagger");
+const healthRoutes = require("./routes/sampleRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
 
-function createApp() {
-  const app = express();
+const app = express();
 
-  app.use(cors());
-  app.use(express.json());
-  app.use(morgan("dev"));
+app.use(express.json());
 
-  app.use("/", sampleRoutes);
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const durationMs = Date.now() - start;
+    console.log(
+      `${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs}ms`
+    );
+  });
+  next();
+});
 
-  return app;
-}
+setupSwagger(app);
 
-module.exports = createApp;
+app.use("/api/inventory", healthRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
+module.exports = app;

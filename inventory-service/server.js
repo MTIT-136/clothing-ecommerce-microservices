@@ -1,27 +1,23 @@
 require("dotenv").config();
 
-const mongoose = require("mongoose");
-const createApp = require("./app");
+const connectDB = require("./config/db");
+const app = require("./app");
 
-const port = Number(process.env.PORT) || 3006;
-const serviceName = process.env.SERVICE_NAME || "inventory-service";
+const PORT = Number(process.env.PORT) || 3004;
 
 async function start() {
-  if (!process.env.MONGODB_URI) {
-    console.warn(`[${serviceName}] MONGODB_URI not set. Skipping MongoDB connection.`);
-  } else {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`[${serviceName}] MongoDB connected`);
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error(
+      "[Inventory Service] Cannot start: database connection failed."
+    );
+    process.exit(1);
   }
 
-  const app = createApp();
-  app.listen(port, () => {
-    console.log(`[${serviceName}] listening on ${port}`);
+  app.listen(PORT, () => {
+    console.log(`Inventory Service running on port ${PORT}`);
   });
 }
 
-start().catch((err) => {
-  console.error(`[${serviceName}] failed to start`, err);
-  process.exit(1);
-});
-
+start();
