@@ -88,6 +88,22 @@ function createApp() {
     })
   );
   app.use(
+    "/api/reviews/api-docs",
+    createProxyMiddleware({
+      target: reviewServiceUrl,
+      changeOrigin: true,
+      pathRewrite: { "^/api/reviews/api-docs": "/api-docs" },
+      on: {
+        proxyRes(proxyRes) {
+          const redirectLocation = proxyRes.headers.location;
+          if (redirectLocation && redirectLocation.startsWith("/api-docs")) {  
+            proxyRes.headers.location = `/api/reviews${redirectLocation}`;     
+          }
+        },
+      },
+    })
+  );
+  app.use(
     "/api/reviews",
     createProxyMiddleware({
       target: reviewServiceUrl,
