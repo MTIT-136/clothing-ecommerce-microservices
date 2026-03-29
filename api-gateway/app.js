@@ -9,7 +9,15 @@ function createApp() {
   const app = express();
 
   app.use(cors());
-  app.use(express.json());
+  // Do NOT parse JSON for proxied /api/* routes — the body stream must stay intact for
+  // http-proxy-middleware to forward POST/PUT bodies. Parsing here causes long hangs / empty bodies.
+  const jsonParser = express.json();
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    jsonParser(req, res, next);
+  });
   app.use(morgan("dev"));
 
   // Simple gateway-level route
@@ -49,8 +57,23 @@ function createApp() {
       on: {
         proxyRes(proxyRes) {
           const location = proxyRes.headers.location;
-          if (location && location.startsWith("/")) {
+          if (!location) return;
+          // Avoid redirect loops: do not prefix twice; rewrite relative and same-host paths only
+          if (location.startsWith("/api/orders")) return;
+          if (location.startsWith("/")) {
             proxyRes.headers.location = `/api/orders${location}`;
+            return;
+          }
+          try {
+            const u = new URL(location);
+            if (u.hostname === "localhost" || u.hostname === "127.0.0.1") {
+              const path = u.pathname + u.search;
+              if (path.startsWith("/") && !path.startsWith("/api/orders")) {
+                proxyRes.headers.location = `/api/orders${path}`;
+              }
+            }
+          } catch {
+            // ignore invalid Location
           }
         },
       },
