@@ -51,10 +51,33 @@ function createApp() {
   app.use(
     "/api/cart",
     createProxyMiddleware({
-      target: "http://localhost:3003",
+      target: cartServiceUrl,
       changeOrigin: true,
       pathRewrite: { "^/api/cart": "" },
-    }),
+      on: {
+        proxyRes(proxyRes) {
+          const location = proxyRes.headers.location;
+          if (!location) return;
+          // Avoid redirect loops: do not prefix twice; rewrite relative and same-host paths only
+          if (location.startsWith("/api/cart")) return;
+          if (location.startsWith("/")) {
+            proxyRes.headers.location = `/api/cart${location}`;
+            return;
+          }
+          try {
+            const u = new URL(location);
+            if (u.hostname === "localhost" || u.hostname === "127.0.0.1") {
+              const path = u.pathname + u.search;
+              if (path.startsWith("/") && !path.startsWith("/api/cart")) {
+                proxyRes.headers.location = `/api/cart${path}`;
+              }
+            }
+          } catch {
+            // ignore invalid Location
+          }
+        },
+      },
+    })
   );
   app.use(
     "/api/orders",
