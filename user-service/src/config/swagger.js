@@ -47,7 +47,9 @@ const userSchemas = {
   HealthOk: {
     type: 'object',
     properties: {
-      status: { type: 'string', example: 'User service is running' },
+      service: { type: 'string', example: 'user-service' },
+      status: { type: 'string', example: 'ok' },
+      message: { type: 'string', example: 'User service is running' },
     },
   },
 };
@@ -82,7 +84,11 @@ const options = {
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/HealthOk' },
-                  example: { status: 'User service is running' },
+                  example: {
+                    service: 'user-service',
+                    status: 'ok',
+                    message: 'User service is running',
+                  },
                 },
               },
             },
