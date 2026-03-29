@@ -9,9 +9,8 @@ const userServiceUrl = process.env.USER_SERVICE_URL || "http://localhost:3001";
 const productServiceUrl = process.env.PRODUCT_SERVICE_URL || "http://localhost:3002";
 const cartServiceUrl = process.env.CART_SERVICE_URL || "http://localhost:3003";
 const orderServiceUrl = process.env.ORDER_SERVICE_URL || "http://localhost:3004";
-const paymentServiceUrl = process.env.PAYMENT_SERVICE_URL || "http://localhost:3005";
 const reviewServiceUrl = process.env.REVIEW_SERVICE_URL || "http://localhost:3006";
-const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || "http://localhost:3007";
+const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || "http://localhost:3005";
 
 function createApp() {
   const app = express();
@@ -109,14 +108,6 @@ function createApp() {
         },
       },
     })
-  );
-  app.use(
-    "/api/payments",
-    createProxyMiddleware({
-      target: "http://localhost:3005",
-      changeOrigin: true,
-      pathRewrite: { "^/api/payments": "" },
-    }),
   );
   app.use(
     "/api/reviews",

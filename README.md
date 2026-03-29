@@ -9,8 +9,7 @@ This repository is a simple monorepo for a clothing eCommerce platform built wit
 3. `product-service` (port `3002`)
 4. `cart-service` (port `3003`)
 5. `order-service` (port `3004`)
-6. `payment-service` (port `3005`)
-7. `inventory-service` (port `3006`)
+6. `inventory-service` (port `3005`)
 
 ## Prerequisites
 - Node.js (LTS)
@@ -30,7 +29,6 @@ npm --workspace user-service start
 npm --workspace product-service start
 npm --workspace cart-service start
 npm --workspace order-service start
-npm --workspace payment-service start
 npm --workspace inventory-service start
 ```
 
@@ -45,8 +43,7 @@ The gateway routes requests to the corresponding microservice:
 - `GET http://localhost:8000/api/products/health` -> `product-service` on `3002`
 - `GET http://localhost:8000/api/cart/health` -> `cart-service` on `3003`
 - `GET http://localhost:8000/api/orders/health` -> `order-service` on `3004`
-- `GET http://localhost:8000/api/payments/health` -> `payment-service` on `3005`
-- `GET http://localhost:8000/api/inventory/health` -> `inventory-service` on `3006`
+- `GET http://localhost:8000/api/inventory/health` -> `inventory-service` on `3005`
 
 Each service also exposes a standalone health check at:
 - `GET http://localhost:<service-port>/health`
