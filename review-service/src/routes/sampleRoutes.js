@@ -4,10 +4,9 @@ const router = express.Router();
 
 router.get("/health", (req, res) => {
   res.json({
-    service: process.env.SERVICE_NAME || "order-service",
+    service: process.env.SERVICE_NAME || "review-service",
     status: "ok",
   });
 });
 
 module.exports = router;
-

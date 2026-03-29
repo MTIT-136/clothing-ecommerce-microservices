@@ -3,10 +3,10 @@ const cors = require("cors");
 const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
 
-const sampleRoutes = require("./routes/sampleRoutes");
-const cartRoutes = require("./routes/cartRoutes");
-const { notFoundHandler, errorHandler } = require("./middlewares/errorHandler");
-const createOpenApiSpec = require("./docs/openapi");
+const sampleRoutes = require("./src/routes/sampleRoutes");
+const reviewRoutes = require("./src/routes/reviewRoutes");
+const { notFoundHandler, errorHandler } = require("./src/middleware/errorHandler");
+const createOpenApiSpec = require("./src/docs/openapi");
 
 function createApp() {
   const app = express();
@@ -22,7 +22,7 @@ function createApp() {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
   app.use("/", sampleRoutes);
-  app.use("/", cartRoutes);
+  app.use("/", reviewRoutes);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
@@ -30,4 +30,3 @@ function createApp() {
 }
 
 module.exports = createApp;
-
