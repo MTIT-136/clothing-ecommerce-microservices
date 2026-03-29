@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const createApp = require("./app");
-const connectDB = require("./config/db");
+const connectDB = require("./src/config/db");
 
 const port = Number(process.env.PORT) || 3002;
 const serviceName = "product-service";

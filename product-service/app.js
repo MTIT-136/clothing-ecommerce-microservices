@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 
-const productRoutes = require("./routes/productRoutes");
+const productRoutes = require("./src/routes/productRoutes");
 const { swaggerSpec, swaggerUi } = require("./swagger");
 
 function createApp() {
