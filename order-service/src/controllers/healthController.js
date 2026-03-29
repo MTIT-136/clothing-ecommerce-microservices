@@ -1,8 +1,9 @@
+const { sendSuccess } = require("../utils/response");
+
 function health(req, res) {
-  res.json({
-    success: true,
-    message: "Service is healthy",
-    data: { service: "order-service", status: "ok" },
+  sendSuccess(res, "Service is healthy", {
+    service: process.env.SERVICE_NAME || "order-service",
+    status: "ok",
   });
 }
 
