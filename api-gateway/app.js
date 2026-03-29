@@ -88,6 +88,14 @@ function createApp() {
     })
   );
   app.use(
+    "/api/reviews",
+    createProxyMiddleware({
+      target: reviewServiceUrl,
+      changeOrigin: true,
+      pathRewrite: { "^/api/reviews": "" },
+    })
+  );
+  app.use(
     "/api/inventory",
     createProxyMiddleware({
       target: inventoryServiceUrl,
