@@ -38,15 +38,15 @@ function createApp() {
       target: "http://localhost:3001",
       changeOrigin: true,
       pathRewrite: { "^/api/users": "" },
-    })
+    }),
   );
   app.use(
     "/api/products",
     createProxyMiddleware({
       target: "http://localhost:3002",
       changeOrigin: true,
-      pathRewrite: { "^/api/products": "" },
-    })
+      pathRewrite: (path) => `/api/products${path}`,
+    }),
   );
   app.use(
     "/api/cart",
@@ -54,7 +54,7 @@ function createApp() {
       target: "http://localhost:3003",
       changeOrigin: true,
       pathRewrite: { "^/api/cart": "" },
-    })
+    }),
   );
   app.use(
     "/api/orders",
@@ -93,7 +93,7 @@ function createApp() {
       target: "http://localhost:3005",
       changeOrigin: true,
       pathRewrite: { "^/api/payments": "" },
-    })
+    }),
   );
   app.use(
     "/api/reviews",
@@ -109,12 +109,10 @@ function createApp() {
       target: inventoryServiceUrl,
       changeOrigin: true,
       pathRewrite: { "^/api/inventory": "" },
-    })
+    }),
   );
 
   return app;
 }
 
 module.exports = createApp;
-
-
