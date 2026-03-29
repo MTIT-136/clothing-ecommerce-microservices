@@ -12,6 +12,68 @@ const orderServiceUrl = process.env.ORDER_SERVICE_URL || "http://localhost:3004"
 const reviewServiceUrl = process.env.REVIEW_SERVICE_URL || "http://localhost:3006";
 const inventoryServiceUrl = process.env.INVENTORY_SERVICE_URL || "http://localhost:3005";
 
+/**
+ * Rewrites redirect Location headers from upstream so relative paths stay under the gateway mount
+ * (Swagger UI often redirects to /api-docs/ without the gateway prefix).
+ */
+function createLocationRewriteHandler(gatewayPrefix) {
+  return function locationRewriteProxyRes(proxyRes) {
+    const location = proxyRes.headers.location;
+    if (!location) return;
+    if (location.startsWith(gatewayPrefix)) return;
+
+    if (location.startsWith("/")) {
+      proxyRes.headers.location = `${gatewayPrefix}${location}`;
+      return;
+    }
+
+    try {
+      const u = new URL(location);
+      if (u.hostname === "localhost" || u.hostname === "127.0.0.1") {
+        const p = u.pathname + u.search;
+        if (p.startsWith("/") && !p.startsWith(gatewayPrefix)) {
+          proxyRes.headers.location = `${gatewayPrefix}${p}`;
+        }
+      }
+    } catch {
+      // ignore invalid Location
+    }
+  };
+}
+
+/** Product & inventory: REST under /api/<name>; Swagger only at /api-docs on the service. */
+function createPathRewritePrefixedApi(apiPrefix) {
+  return (path) => {
+    if (path === "/api-docs" || path.startsWith("/api-docs/")) {
+      return path;
+    }
+    return `${apiPrefix}${path}`;
+  };
+}
+
+/**
+ * Cart & review: docs/openapi at service root; REST paths do not repeat the gateway segment.
+ * `listPath` maps the gateway base (proxied as `/`) to the collection route, like GET /api/products.
+ */
+function createPathRewriteStripGatewayPrefix(stripRegex, { listPath } = {}) {
+  return (path) => {
+    if (path === "/api-docs" || path.startsWith("/api-docs/")) {
+      return path;
+    }
+    if (path === "/openapi.json" || path.startsWith("/openapi.json")) {
+      return path;
+    }
+    const normalized = path === "" ? "/" : path;
+    if (listPath && normalized === "/") {
+      return listPath;
+    }
+    if (stripRegex.test(path)) {
+      return path.replace(stripRegex, "") || "/";
+    }
+    return path;
+  };
+}
+
 function createApp() {
   const app = express();
 
@@ -27,102 +89,64 @@ function createApp() {
   });
   app.use(morgan("dev"));
 
-  // Simple gateway-level route
   app.use("/", sampleRoutes);
 
-  // Proxy routes to microservices (strip the /api/<service> prefix)
   app.use(
     "/api/users",
     createProxyMiddleware({
-      target: "http://localhost:3001",
+      target: userServiceUrl,
       changeOrigin: true,
       pathRewrite: { "^/api/users": "" },
     }),
   );
+
   app.use(
     "/api/products",
     createProxyMiddleware({
-      target: "http://localhost:3002",
+      target: productServiceUrl,
       changeOrigin: true,
-      pathRewrite: (path) => `/api/products${path}`,
+      pathRewrite: createPathRewritePrefixedApi("/api/products"),
+      on: { proxyRes: createLocationRewriteHandler("/api/products") },
     }),
   );
+
   app.use(
     "/api/cart",
     createProxyMiddleware({
       target: cartServiceUrl,
       changeOrigin: true,
-      pathRewrite: { "^/api/cart": "" },
-      on: {
-        proxyRes(proxyRes) {
-          const location = proxyRes.headers.location;
-          if (!location) return;
-          // Avoid redirect loops: do not prefix twice; rewrite relative and same-host paths only
-          if (location.startsWith("/api/cart")) return;
-          if (location.startsWith("/")) {
-            proxyRes.headers.location = `/api/cart${location}`;
-            return;
-          }
-          try {
-            const u = new URL(location);
-            if (u.hostname === "localhost" || u.hostname === "127.0.0.1") {
-              const path = u.pathname + u.search;
-              if (path.startsWith("/") && !path.startsWith("/api/cart")) {
-                proxyRes.headers.location = `/api/cart${path}`;
-              }
-            }
-          } catch {
-            // ignore invalid Location
-          }
-        },
-      },
-    })
+      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/cart/, { listPath: "/carts" }),
+      on: { proxyRes: createLocationRewriteHandler("/api/cart") },
+    }),
   );
+
   app.use(
     "/api/orders",
     createProxyMiddleware({
-      target: "http://localhost:3004",
+      target: orderServiceUrl,
       changeOrigin: true,
       pathRewrite: { "^/api/orders": "" },
-      on: {
-        proxyRes(proxyRes) {
-          const location = proxyRes.headers.location;
-          if (!location) return;
-          // Avoid redirect loops: do not prefix twice; rewrite relative and same-host paths only
-          if (location.startsWith("/api/orders")) return;
-          if (location.startsWith("/")) {
-            proxyRes.headers.location = `/api/orders${location}`;
-            return;
-          }
-          try {
-            const u = new URL(location);
-            if (u.hostname === "localhost" || u.hostname === "127.0.0.1") {
-              const path = u.pathname + u.search;
-              if (path.startsWith("/") && !path.startsWith("/api/orders")) {
-                proxyRes.headers.location = `/api/orders${path}`;
-              }
-            }
-          } catch {
-            // ignore invalid Location
-          }
-        },
-      },
-    })
+      on: { proxyRes: createLocationRewriteHandler("/api/orders") },
+    }),
   );
+
   app.use(
     "/api/reviews",
     createProxyMiddleware({
       target: reviewServiceUrl,
       changeOrigin: true,
-      pathRewrite: { "^/api/reviews": "" },
-    })
+      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/reviews/, { listPath: "/reviews" }),
+      on: { proxyRes: createLocationRewriteHandler("/api/reviews") },
+    }),
   );
+
   app.use(
     "/api/inventory",
     createProxyMiddleware({
       target: inventoryServiceUrl,
       changeOrigin: true,
-      pathRewrite: { "^/api/inventory": "" },
+      pathRewrite: createPathRewritePrefixedApi("/api/inventory"),
+      on: { proxyRes: createLocationRewriteHandler("/api/inventory") },
     }),
   );
 

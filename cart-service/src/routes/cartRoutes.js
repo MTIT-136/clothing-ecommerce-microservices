@@ -5,6 +5,7 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
 
+router.get("/carts", asyncHandler(cartController.listCarts));
 router.get("/carts/:userId", asyncHandler(cartController.getCart));
 router.post("/carts/:userId/items", asyncHandler(cartController.addCartItem));
 router.patch(

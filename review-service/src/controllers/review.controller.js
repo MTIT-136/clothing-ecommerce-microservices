@@ -1,5 +1,10 @@
 const reviewService = require("../services/review.service");
 
+async function listReviews(req, res) {
+  const reviews = await reviewService.listAllReviews();
+  res.status(200).json(reviews);
+}
+
 async function getReviews(req, res) {
   const reviews = await reviewService.getReviewsByProductId(req.params.productId);
   res.status(200).json(reviews);
@@ -26,6 +31,7 @@ async function removeReview(req, res) {
 }
 
 module.exports = {
+  listReviews,
   getReviews,
   addReview,
   updateReview,

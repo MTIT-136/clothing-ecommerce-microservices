@@ -5,6 +5,7 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
 
+router.get("/reviews", asyncHandler(reviewController.listReviews));
 router.get("/reviews/:productId", asyncHandler(reviewController.getReviews));
 router.post("/reviews/:productId", asyncHandler(reviewController.addReview));
 router.patch(
