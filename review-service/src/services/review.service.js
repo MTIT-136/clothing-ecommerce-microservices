@@ -101,8 +101,14 @@ async function removeReview(productId, reviewId, userId) {
   return { message: "Review deleted" };
 }
 
+async function listAllReviews() {
+  const reviews = await Review.find({}).sort({ createdAt: -1 });
+  return reviews.map((r) => r.toClient());
+}
+
 module.exports = {
   getReviewsByProductId,
+  listAllReviews,
   addReview,
   updateReview,
   removeReview,

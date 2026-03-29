@@ -44,6 +44,25 @@ function createOpenApiSpec() {
           },
         },
       },
+      "/carts": {
+        get: {
+          tags: ["Cart"],
+          summary: "List all carts",
+          responses: {
+            200: {
+              description: "All carts (newest activity first)",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/CartResponse" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       "/carts/{userId}": {
         get: {
           tags: ["Cart"],
