@@ -51,14 +51,21 @@ function createPathRewritePrefixedApi(apiPrefix) {
   };
 }
 
-/** Cart & review: docs/openapi at service root; REST paths do not repeat the gateway segment. */
-function createPathRewriteStripGatewayPrefix(stripRegex) {
+/**
+ * Cart & review: docs/openapi at service root; REST paths do not repeat the gateway segment.
+ * `listPath` maps the gateway base (proxied as `/`) to the collection route, like GET /api/products.
+ */
+function createPathRewriteStripGatewayPrefix(stripRegex, { listPath } = {}) {
   return (path) => {
     if (path === "/api-docs" || path.startsWith("/api-docs/")) {
       return path;
     }
     if (path === "/openapi.json" || path.startsWith("/openapi.json")) {
       return path;
+    }
+    const normalized = path === "" ? "/" : path;
+    if (listPath && normalized === "/") {
+      return listPath;
     }
     if (stripRegex.test(path)) {
       return path.replace(stripRegex, "") || "/";
@@ -108,7 +115,7 @@ function createApp() {
     createProxyMiddleware({
       target: cartServiceUrl,
       changeOrigin: true,
-      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/cart/),
+      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/cart/, { listPath: "/carts" }),
       on: { proxyRes: createLocationRewriteHandler("/api/cart") },
     }),
   );
@@ -128,7 +135,7 @@ function createApp() {
     createProxyMiddleware({
       target: reviewServiceUrl,
       changeOrigin: true,
-      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/reviews/),
+      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/reviews/, { listPath: "/reviews" }),
       on: { proxyRes: createLocationRewriteHandler("/api/reviews") },
     }),
   );
