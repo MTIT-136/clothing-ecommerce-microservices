@@ -1,20 +1,34 @@
-const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
+const express = require('express');
+const cors = require('cors');
 
-const sampleRoutes = require("./routes/sampleRoutes");
+const userRoutes = require('./src/routes/userRoutes');
+const { swaggerUiServe, swaggerUiSetup } = require('./src/config/swagger');
+const errorMiddleware = require('./src/middleware/errorMiddleware');
 
-function createApp() {
-  const app = express();
+const app = express();
 
-  app.use(cors());
-  app.use(express.json());
-  app.use(morgan("dev"));
+app.use(express.json());
+app.use(cors());
 
-  app.use("/", sampleRoutes);
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
 
-  return app;
-}
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'User service is running' });
+});
 
-module.exports = createApp;
+app.use('/api/users', userRoutes);
 
+app.use('/api-docs', swaggerUiServe, swaggerUiSetup);
+
+app.use((req, res, next) => {
+  const err = new Error('Not found');
+  err.statusCode = 404;
+  next(err);
+});
+
+app.use(errorMiddleware);
+
+module.exports = app;

@@ -1,27 +1,25 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const mongoose = require("mongoose");
-const createApp = require("./app");
+const app = require('./app');
+const { connectDB } = require('./src/config/db');
 
-const port = Number(process.env.PORT) || 3001;
-const serviceName = process.env.SERVICE_NAME || "user-service";
+const PORT = Number(process.env.PORT) || 3001;
 
 async function start() {
-  if (!process.env.MONGODB_URI) {
-    console.warn(`[${serviceName}] MONGODB_URI not set. Skipping MongoDB connection.`);
-  } else {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`[${serviceName}] MongoDB connected`);
-  }
+  try {
+    await connectDB();
 
-  const app = createApp();
-  app.listen(port, () => {
-    console.log(`[${serviceName}] listening on ${port}`);
-  });
+    app.listen(PORT, () => {
+      const baseUrl = `http://localhost:${PORT}`;
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Users API: ${baseUrl}/api/users`);
+      console.log(`Swagger: ${baseUrl}/api-docs`);
+      console.log(`Health: ${baseUrl}/health`);
+    });
+  } catch (err) {
+    console.error('Startup failed:', err.message);
+    process.exit(1);
+  }
 }
 
-start().catch((err) => {
-  console.error(`[${serviceName}] failed to start`, err);
-  process.exit(1);
-});
-
+start();

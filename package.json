@@ -12,6 +12,12 @@
   ],
   "scripts": {
     "start": "node api-gateway/server.js",
-    "start:all": "echo \"Start services individually: npm --workspace <service> start\""
+    "start:all": "echo \"Start services individually: npm --workspace <service> start\"",
+    "dev": "concurrently -k -n gateway,user -c blue,green \"npm run dev -w api-gateway\" \"npm run dev -w user-service\"",
+    "dev:gateway": "npm run dev -w api-gateway",
+    "dev:user": "npm run dev -w user-service"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
