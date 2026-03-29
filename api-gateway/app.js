@@ -90,7 +90,7 @@ function createApp() {
   app.use(
     "/api/inventory",
     createProxyMiddleware({
-      target: "http://localhost:3006",
+      target: inventoryServiceUrl,
       changeOrigin: true,
       pathRewrite: { "^/api/inventory": "" },
     })
