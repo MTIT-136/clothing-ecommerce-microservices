@@ -10,7 +10,10 @@ const options = {
       version: "1.0.0",
       description: "MVP order microservice (snapshot of cart line items)",
     },
-    servers: [{ url: "http://localhost:3004", description: "Local" }],
+    servers: [
+      { url: "http://localhost:3004", description: "Order service (direct)" },
+      { url: "http://localhost:8000", description: "Via API Gateway" },
+    ],
   },
   apis: [path.join(__dirname, "../routes/orderRoutes.js")],
 };
