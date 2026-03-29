@@ -6,16 +6,13 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Order Service API",
+      title: "Inventory Service API",
       version: "1.0.0",
-      description: "MVP order microservice (snapshot of cart line items)",
+      description: "Inventory microservice (stock by product and warehouse)",
     },
-    servers: [
-      { url: "http://localhost:3004", description: "Order service (direct)" },
-      { url: "http://localhost:8000", description: "Via API Gateway" },
-    ],
+    servers: [{ url: "http://localhost:3005", description: "Local" }],
   },
-  apis: [path.join(__dirname, "../routes/orderRoutes.js")],
+  apis: [path.join(__dirname, "../routes/inventoryRoutes.js")],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

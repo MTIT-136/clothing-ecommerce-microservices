@@ -7,7 +7,6 @@
     "product-service",
     "cart-service",
     "order-service",
-    "payment-service",
     "inventory-service"
   ],
   "scripts": {

@@ -1,9 +1,9 @@
 require("dotenv").config();
 
-const connectDB = require("./config/db");
+const connectDB = require("./src/config/db");
 const app = require("./app");
 
-const PORT = Number(process.env.PORT) || 3004;
+const PORT = Number(process.env.PORT) || 3005;
 
 async function start() {
   try {
