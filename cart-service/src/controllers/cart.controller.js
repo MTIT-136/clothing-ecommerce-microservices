@@ -1,5 +1,10 @@
 const cartService = require("../services/cart.service");
 
+async function listCarts(req, res) {
+  const carts = await cartService.listAllCarts();
+  res.status(200).json(carts);
+}
+
 async function getCart(req, res) {
   const cart = await cartService.getCartByUserId(req.params.userId);
   res.status(200).json(cart);
@@ -30,6 +35,7 @@ async function clearUserCart(req, res) {
 }
 
 module.exports = {
+  listCarts,
   getCart,
   addCartItem,
   updateCartItem,

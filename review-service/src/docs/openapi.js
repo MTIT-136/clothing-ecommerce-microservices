@@ -18,7 +18,7 @@ function createOpenApiSpec() {
       {
         url:
           process.env.SWAGGER_GATEWAY_SERVER_URL ||
-          `http://localhost:${gatewayPort}/api/review`,
+          `http://localhost:${gatewayPort}/api/reviews`,
         description: "API gateway URL for review service",
       },
     ],
@@ -40,6 +40,25 @@ function createOpenApiSpec() {
           responses: {
             200: {
               description: "Service is healthy",
+            },
+          },
+        },
+      },
+      "/reviews": {
+        get: {
+          tags: ["Review"],
+          summary: "List all reviews",
+          responses: {
+            200: {
+              description: "All reviews (newest first)",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/ReviewResponse" },
+                  },
+                },
+              },
             },
           },
         },

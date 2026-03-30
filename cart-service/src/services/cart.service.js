@@ -185,8 +185,14 @@ async function clearCart(userId) {
   return cart.toClient();
 }
 
+async function listAllCarts() {
+  const carts = await Cart.find({}).sort({ updatedAt: -1 });
+  return carts.map((cart) => cart.toClient());
+}
+
 module.exports = {
   getCartByUserId,
+  listAllCarts,
   addItem,
   updateItem,
   removeItem,

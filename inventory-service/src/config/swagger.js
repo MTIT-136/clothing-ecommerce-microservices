@@ -10,7 +10,10 @@ const options = {
       version: "1.0.0",
       description: "Inventory microservice (stock by product and warehouse)",
     },
-    servers: [{ url: "http://localhost:3004", description: "Local" }],
+    servers: [
+      { url: "http://localhost:8000", description: "Via API gateway" },
+      { url: "http://localhost:3005", description: "Inventory service direct" },
+    ],
   },
   apis: [path.join(__dirname, "../routes/inventoryRoutes.js")],
 };
