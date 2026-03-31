@@ -5,15 +5,15 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
 
-router.get("/reviews", asyncHandler(reviewController.listReviews));
-router.get("/reviews/:productId", asyncHandler(reviewController.getReviews));
-router.post("/reviews/:productId", asyncHandler(reviewController.addReview));
+router.get("/", asyncHandler(reviewController.listReviews));
+router.get("/:productId", asyncHandler(reviewController.getReviews));
+router.post("/:productId", asyncHandler(reviewController.addReview));
 router.patch(
-  "/reviews/:productId/:reviewId",
+  "/:productId/:reviewId",
   asyncHandler(reviewController.updateReview)
 );
 router.delete(
-  "/reviews/:productId/:reviewId",
+  "/:productId/:reviewId",
   asyncHandler(reviewController.removeReview)
 );
 

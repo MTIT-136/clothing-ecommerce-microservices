@@ -18,7 +18,7 @@ function createOpenApiSpec() {
       {
         url:
           process.env.SWAGGER_GATEWAY_SERVER_URL ||
-          `http://localhost:${gatewayPort}/api/cart`,
+          `http://localhost:${gatewayPort}`,
         description: "API gateway URL for cart service",
       },
     ],
@@ -44,7 +44,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/carts/{userId}": {
+      "/api/cart/{userId}": {
         get: {
           tags: ["Cart"],
           summary: "View user's cart",
@@ -70,7 +70,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/carts/{userId}/items": {
+      "/api/cart/{userId}/items": {
         post: {
           tags: ["Cart"],
           summary: "Add item to cart",
@@ -130,7 +130,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/carts/{userId}/items/{itemId}": {
+      "/api/cart/{userId}/items/{itemId}": {
         patch: {
           tags: ["Cart"],
           summary: "Update an item in cart",
