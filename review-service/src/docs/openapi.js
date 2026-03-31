@@ -44,7 +44,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/reviews": {
+      "/reviews": {
         get: {
           tags: ["Review"],
           summary: "List all reviews",
@@ -63,7 +63,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/reviews/{productId}": {
+      "/reviews/{productId}": {
         get: {
           tags: ["Review"],
           summary: "Get reviews for a product",
@@ -124,7 +124,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/reviews/{productId}/{reviewId}": {
+      "/reviews/{productId}/{reviewId}": {
         patch: {
           tags: ["Review"],
           summary: "Update a review",

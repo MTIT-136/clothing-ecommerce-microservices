@@ -22,8 +22,8 @@ function createApp() {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
   app.use("/", sampleRoutes);
-  app.use("/api", cartRoutes);
   app.use("/", cartRoutes);
+  app.use("/api", cartRoutes);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

@@ -44,45 +44,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/cart": {
-        get: {
-          tags: ["Cart"],
-          summary: "List all carts (same as GET /api/carts; gateway-style path)",
-          responses: {
-            200: {
-              description: "All carts",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/CartResponse" },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      "/api/carts": {
-        get: {
-          tags: ["Cart"],
-          summary: "List all carts",
-          responses: {
-            200: {
-              description: "All carts",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/CartResponse" },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      "/api/carts/{userId}": {
+      "/carts/{userId}": {
         get: {
           tags: ["Cart"],
           summary: "View user's cart",
@@ -108,7 +70,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/carts/{userId}/items": {
+      "/carts/{userId}/items": {
         post: {
           tags: ["Cart"],
           summary: "Add item to cart",
@@ -168,7 +130,7 @@ function createOpenApiSpec() {
           },
         },
       },
-      "/api/carts/{userId}/items/{itemId}": {
+      "/carts/{userId}/items/{itemId}": {
         patch: {
           tags: ["Cart"],
           summary: "Update an item in cart",
