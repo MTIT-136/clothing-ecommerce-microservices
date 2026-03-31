@@ -51,26 +51,39 @@ function createPathRewritePrefixedApi(apiPrefix) {
   };
 }
 
-/**
- * Cart & review: docs/openapi at service root; REST paths do not repeat the gateway segment.
- * `listPath` maps the gateway base (proxied as `/`) to the collection route, like GET /api/products.
- */
-function createPathRewriteStripGatewayPrefix(stripRegex, { listPath } = {}) {
+/** Cart service exposes REST under /api/cart; health and docs stay at /. */
+function createCartGatewayPathRewrite() {
   return (path) => {
-    if (path === "/api-docs" || path.startsWith("/api-docs/")) {
-      return path;
+    const q = path.indexOf("?");
+    const pathname = q === -1 ? path : path.slice(0, q);
+    const query = q === -1 ? "" : path.slice(q);
+
+    if (pathname === "/api-docs" || pathname.startsWith("/api-docs/")) return path;
+    if (pathname === "/openapi.json" || pathname.startsWith("/openapi.json")) return path;
+    if (pathname === "/health") return path;
+
+    if (pathname === "/" || pathname === "") {
+      return `/api/cart${query}`;
     }
-    if (path === "/openapi.json" || path.startsWith("/openapi.json")) {
-      return path;
+    return `/api/cart${pathname}${query}`;
+  };
+}
+
+/** Review service exposes REST under /api/reviews; health and docs stay at /. */
+function createReviewsGatewayPathRewrite() {
+  return (path) => {
+    const q = path.indexOf("?");
+    const pathname = q === -1 ? path : path.slice(0, q);
+    const query = q === -1 ? "" : path.slice(q);
+
+    if (pathname === "/api-docs" || pathname.startsWith("/api-docs/")) return path;
+    if (pathname === "/openapi.json" || pathname.startsWith("/openapi.json")) return path;
+    if (pathname === "/health") return path;
+
+    if (pathname === "/" || pathname === "") {
+      return `/api/reviews${query}`;
     }
-    const normalized = path === "" ? "/" : path;
-    if (listPath && normalized === "/") {
-      return listPath;
-    }
-    if (stripRegex.test(path)) {
-      return path.replace(stripRegex, "") || "/";
-    }
-    return path;
+    return `/api/reviews${pathname}${query}`;
   };
 }
 
@@ -115,7 +128,7 @@ function createApp() {
     createProxyMiddleware({
       target: cartServiceUrl,
       changeOrigin: true,
-      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/cart/, { listPath: "/cart" }),
+      pathRewrite: createCartGatewayPathRewrite(),
       on: { proxyRes: createLocationRewriteHandler("/api/cart") },
     }),
   );
@@ -135,7 +148,7 @@ function createApp() {
     createProxyMiddleware({
       target: reviewServiceUrl,
       changeOrigin: true,
-      pathRewrite: createPathRewriteStripGatewayPrefix(/^\/api\/reviews/, { listPath: "/reviews" }),
+      pathRewrite: createReviewsGatewayPathRewrite(),
       on: { proxyRes: createLocationRewriteHandler("/api/reviews") },
     }),
   );
