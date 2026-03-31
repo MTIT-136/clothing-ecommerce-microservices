@@ -5,6 +5,9 @@ const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
 
+// Singular /api/cart matches gateway naming (GET list only)
+router.get("/cart", asyncHandler(cartController.listCarts));
+
 router.get("/carts", asyncHandler(cartController.listCarts));
 router.get("/carts/:userId", asyncHandler(cartController.getCart));
 router.post("/carts/:userId/items", asyncHandler(cartController.addCartItem));
