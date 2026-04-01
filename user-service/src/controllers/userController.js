@@ -1,49 +1,31 @@
 const userService = require('../services/userService');
+const { asyncHandler } = require('../middleware/asyncHandler');
+const { sendSuccess } = require('../utils/response');
 
-async function registerUser(req, res, next) {
-  try {
-    const user = await userService.registerUser(req.body);
-    res.status(201).json(user);
-  } catch (err) {
-    next(err);
-  }
-}
+const registerUser = asyncHandler(async (req, res) => {
+  const user = await userService.registerUser(req.body);
+  sendSuccess(res, 'User registered successfully', user, 201);
+});
 
-async function getUsers(req, res, next) {
-  try {
-    const users = await userService.getAllUsers();
-    res.status(200).json(users);
-  } catch (err) {
-    next(err);
-  }
-}
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await userService.getAllUsers();
+  sendSuccess(res, 'Users retrieved successfully', users);
+});
 
-async function getUserById(req, res, next) {
-  try {
-    const user = await userService.getUserById(req.params.id);
-    res.status(200).json(user);
-  } catch (err) {
-    next(err);
-  }
-}
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await userService.getUserById(req.params.id);
+  sendSuccess(res, 'User retrieved successfully', user);
+});
 
-async function updateUser(req, res, next) {
-  try {
-    const user = await userService.updateUser(req.params.id, req.body);
-    res.status(200).json(user);
-  } catch (err) {
-    next(err);
-  }
-}
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await userService.updateUser(req.params.id, req.body);
+  sendSuccess(res, 'User updated successfully', user);
+});
 
-async function deleteUser(req, res, next) {
-  try {
-    const user = await userService.deleteUser(req.params.id);
-    res.status(200).json(user);
-  } catch (err) {
-    next(err);
-  }
-}
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await userService.deleteUser(req.params.id);
+  sendSuccess(res, 'User deleted successfully', user);
+});
 
 module.exports = {
   registerUser,

@@ -16,7 +16,6 @@ async function start() {
       console.log(`[${serviceName}] listening on ${PORT}`);
       console.log(`Users API: ${baseUrl}/api/users`);
       console.log(`Swagger UI: ${baseUrl}/api-docs`);
-      console.log(`OpenAPI: ${baseUrl}/openapi.json`);
       console.log(`Health: ${baseUrl}/health`);
     });
   } catch (err) {
