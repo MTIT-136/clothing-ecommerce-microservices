@@ -53,7 +53,11 @@ function errorMiddleware(err, req, res, next) {
     details = undefined;
   }
 
-  const body = { message };
+  const body = {
+    success: false,
+    message,
+    data: null,
+  };
   if (details && Object.keys(details).length > 0) {
     body.details = details;
   }

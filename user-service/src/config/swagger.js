@@ -1,6 +1,12 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+// OpenAPI resolves relative server URLs against the spec document URL. When Swagger is
+// loaded via the gateway (e.g. .../api/users/api-docs), url: "/" breaks the base path.
+// Absolute servers keep "Try it out" correct for both direct and gateway access.
+const userServicePort = String(process.env.PORT || '3001');
+const gatewayPort = String(process.env.GATEWAY_PORT || '8000');
+
 const userSchemas = {
   User: {
     type: 'object',
@@ -33,23 +39,53 @@ const userSchemas = {
     },
     description: 'Send at least one field. Omitted fields are left unchanged.',
   },
-  Error: {
+  ApiSuccessUser: {
     type: 'object',
+    required: ['success', 'message', 'data'],
     properties: {
-      message: { type: 'string', example: 'User not found' },
-      details: {
-        type: 'object',
-        additionalProperties: { type: 'string' },
-        example: { email: 'Please provide a valid email address' },
+      success: { type: 'boolean', example: true },
+      message: { type: 'string', example: 'User retrieved successfully' },
+      data: { $ref: '#/components/schemas/User' },
+    },
+  },
+  ApiSuccessUserList: {
+    type: 'object',
+    required: ['success', 'message', 'data'],
+    properties: {
+      success: { type: 'boolean', example: true },
+      message: { type: 'string', example: 'Users retrieved successfully' },
+      data: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/User' },
       },
     },
   },
-  HealthOk: {
+  ApiError: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', example: false },
+      message: { type: 'string', example: 'User not found' },
+      data: { nullable: true, example: null },
+      details: {
+        type: 'object',
+        additionalProperties: { type: 'string' },
+      },
+    },
+  },
+  HealthData: {
     type: 'object',
     properties: {
       service: { type: 'string', example: 'user-service' },
       status: { type: 'string', example: 'ok' },
-      message: { type: 'string', example: 'User service is running' },
+    },
+  },
+  ApiSuccessHealth: {
+    type: 'object',
+    required: ['success', 'message', 'data'],
+    properties: {
+      success: { type: 'boolean', example: true },
+      message: { type: 'string', example: 'Service is healthy' },
+      data: { $ref: '#/components/schemas/HealthData' },
     },
   },
 };
@@ -60,12 +96,18 @@ const options = {
     info: {
       title: 'User Service API',
       version: '1.0.0',
-      description: 'REST API for user registration and management (clothing e-commerce microservice).',
+      description:
+        'REST API for user registration and management (clothing e-commerce microservice). ' +
+        'In Swagger, use the Servers dropdown: direct URL for this service, gateway URL when calling through the API gateway.',
     },
     servers: [
       {
-        url: '/',
-        description: 'Current host (same origin as the service)',
+        url: `http://localhost:${userServicePort}`,
+        description: 'User service direct URL',
+      },
+      {
+        url: `http://localhost:${gatewayPort}`,
+        description: 'API gateway URL for user service',
       },
     ],
     tags: [
@@ -83,11 +125,14 @@ const options = {
               description: 'Service is up',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/HealthOk' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessHealth' },
                   example: {
-                    service: 'user-service',
-                    status: 'ok',
-                    message: 'User service is running',
+                    success: true,
+                    message: 'Service is healthy',
+                    data: {
+                      service: 'user-service',
+                      status: 'ok',
+                    },
                   },
                 },
               },
@@ -132,14 +177,18 @@ const options = {
               description: 'User created',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/User' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessUser' },
                   example: {
-                    _id: '507f1f77bcf86cd799439011',
-                    name: 'Jane Doe',
-                    email: 'jane@example.com',
-                    role: 'customer',
-                    createdAt: '2026-03-28T10:00:00.000Z',
-                    updatedAt: '2026-03-28T10:00:00.000Z',
+                    success: true,
+                    message: 'User registered successfully',
+                    data: {
+                      _id: '507f1f77bcf86cd799439011',
+                      name: 'Jane Doe',
+                      email: 'jane@example.com',
+                      role: 'customer',
+                      createdAt: '2026-03-28T10:00:00.000Z',
+                      updatedAt: '2026-03-28T10:00:00.000Z',
+                    },
                   },
                 },
               },
@@ -148,9 +197,11 @@ const options = {
               description: 'Validation error or bad input',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
                   example: {
+                    success: false,
                     message: 'Email is required',
+                    data: null,
                     details: { email: 'Email is required' },
                   },
                 },
@@ -160,8 +211,12 @@ const options = {
               description: 'Email already registered',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Email already registered' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Email already registered',
+                    data: null,
+                  },
                 },
               },
             },
@@ -169,8 +224,12 @@ const options = {
               description: 'Unexpected server error',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Internal server error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Internal server error',
+                    data: null,
+                  },
                 },
               },
             },
@@ -187,28 +246,29 @@ const options = {
               description: 'Array of users (passwords never returned)',
               content: {
                 'application/json': {
-                  schema: {
-                    type: 'array',
-                    items: { $ref: '#/components/schemas/User' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessUserList' },
+                  example: {
+                    success: true,
+                    message: 'Users retrieved successfully',
+                    data: [
+                      {
+                        _id: '507f1f77bcf86cd799439011',
+                        name: 'Jane Doe',
+                        email: 'jane@example.com',
+                        role: 'customer',
+                        createdAt: '2026-03-28T10:00:00.000Z',
+                        updatedAt: '2026-03-28T10:00:00.000Z',
+                      },
+                      {
+                        _id: '507f191e810c19729de860ea',
+                        name: 'John Smith',
+                        email: 'john@example.com',
+                        role: 'admin',
+                        createdAt: '2026-03-27T08:30:00.000Z',
+                        updatedAt: '2026-03-28T09:15:00.000Z',
+                      },
+                    ],
                   },
-                  example: [
-                    {
-                      _id: '507f1f77bcf86cd799439011',
-                      name: 'Jane Doe',
-                      email: 'jane@example.com',
-                      role: 'customer',
-                      createdAt: '2026-03-28T10:00:00.000Z',
-                      updatedAt: '2026-03-28T10:00:00.000Z',
-                    },
-                    {
-                      _id: '507f191e810c19729de860ea',
-                      name: 'John Smith',
-                      email: 'john@example.com',
-                      role: 'admin',
-                      createdAt: '2026-03-27T08:30:00.000Z',
-                      updatedAt: '2026-03-28T09:15:00.000Z',
-                    },
-                  ],
                 },
               },
             },
@@ -216,8 +276,12 @@ const options = {
               description: 'Unexpected server error',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Internal server error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Internal server error',
+                    data: null,
+                  },
                 },
               },
             },
@@ -243,14 +307,18 @@ const options = {
               description: 'User found',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/User' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessUser' },
                   example: {
-                    _id: '507f1f77bcf86cd799439011',
-                    name: 'Jane Doe',
-                    email: 'jane@example.com',
-                    role: 'customer',
-                    createdAt: '2026-03-28T10:00:00.000Z',
-                    updatedAt: '2026-03-28T10:00:00.000Z',
+                    success: true,
+                    message: 'User retrieved successfully',
+                    data: {
+                      _id: '507f1f77bcf86cd799439011',
+                      name: 'Jane Doe',
+                      email: 'jane@example.com',
+                      role: 'customer',
+                      createdAt: '2026-03-28T10:00:00.000Z',
+                      updatedAt: '2026-03-28T10:00:00.000Z',
+                    },
                   },
                 },
               },
@@ -259,8 +327,12 @@ const options = {
               description: 'Invalid user ID',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Invalid user ID' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Invalid user ID',
+                    data: null,
+                  },
                 },
               },
             },
@@ -268,8 +340,12 @@ const options = {
               description: 'User not found',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'User not found' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'User not found',
+                    data: null,
+                  },
                 },
               },
             },
@@ -277,8 +353,12 @@ const options = {
               description: 'Unexpected server error',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Internal server error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Internal server error',
+                    data: null,
+                  },
                 },
               },
             },
@@ -314,14 +394,18 @@ const options = {
               description: 'Updated user',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/User' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessUser' },
                   example: {
-                    _id: '507f1f77bcf86cd799439011',
-                    name: 'Jane Smith',
-                    email: 'jane.smith@example.com',
-                    role: 'customer',
-                    createdAt: '2026-03-28T10:00:00.000Z',
-                    updatedAt: '2026-03-28T11:20:00.000Z',
+                    success: true,
+                    message: 'User updated successfully',
+                    data: {
+                      _id: '507f1f77bcf86cd799439011',
+                      name: 'Jane Smith',
+                      email: 'jane.smith@example.com',
+                      role: 'customer',
+                      createdAt: '2026-03-28T10:00:00.000Z',
+                      updatedAt: '2026-03-28T11:20:00.000Z',
+                    },
                   },
                 },
               },
@@ -330,13 +414,27 @@ const options = {
               description: 'Invalid ID, validation error, or no fields to update',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
                   examples: {
-                    invalidId: { value: { message: 'Invalid user ID' } },
-                    noUpdates: { value: { message: 'No valid fields to update' } },
+                    invalidId: {
+                      value: {
+                        success: false,
+                        message: 'Invalid user ID',
+                        data: null,
+                      },
+                    },
+                    noUpdates: {
+                      value: {
+                        success: false,
+                        message: 'No valid fields to update',
+                        data: null,
+                      },
+                    },
                     validation: {
                       value: {
+                        success: false,
                         message: 'Password must be at least 8 characters',
+                        data: null,
                         details: { password: 'Password must be at least 8 characters' },
                       },
                     },
@@ -348,8 +446,12 @@ const options = {
               description: 'User not found',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'User not found' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'User not found',
+                    data: null,
+                  },
                 },
               },
             },
@@ -357,8 +459,12 @@ const options = {
               description: 'Email already in use',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Email already registered' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Email already registered',
+                    data: null,
+                  },
                 },
               },
             },
@@ -366,8 +472,12 @@ const options = {
               description: 'Unexpected server error',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Internal server error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Internal server error',
+                    data: null,
+                  },
                 },
               },
             },
@@ -391,14 +501,18 @@ const options = {
               description: 'Deleted user (snapshot before removal)',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/User' },
+                  schema: { $ref: '#/components/schemas/ApiSuccessUser' },
                   example: {
-                    _id: '507f1f77bcf86cd799439011',
-                    name: 'Jane Doe',
-                    email: 'jane@example.com',
-                    role: 'customer',
-                    createdAt: '2026-03-28T10:00:00.000Z',
-                    updatedAt: '2026-03-28T10:00:00.000Z',
+                    success: true,
+                    message: 'User deleted successfully',
+                    data: {
+                      _id: '507f1f77bcf86cd799439011',
+                      name: 'Jane Doe',
+                      email: 'jane@example.com',
+                      role: 'customer',
+                      createdAt: '2026-03-28T10:00:00.000Z',
+                      updatedAt: '2026-03-28T10:00:00.000Z',
+                    },
                   },
                 },
               },
@@ -407,8 +521,12 @@ const options = {
               description: 'Invalid user ID',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Invalid user ID' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Invalid user ID',
+                    data: null,
+                  },
                 },
               },
             },
@@ -416,8 +534,12 @@ const options = {
               description: 'User not found',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'User not found' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'User not found',
+                    data: null,
+                  },
                 },
               },
             },
@@ -425,8 +547,12 @@ const options = {
               description: 'Unexpected server error',
               content: {
                 'application/json': {
-                  schema: { $ref: '#/components/schemas/Error' },
-                  example: { message: 'Internal server error' },
+                  schema: { $ref: '#/components/schemas/ApiError' },
+                  example: {
+                    success: false,
+                    message: 'Internal server error',
+                    data: null,
+                  },
                 },
               },
             },
@@ -452,8 +578,22 @@ const swaggerUiSetup = swaggerUi.setup(swaggerSpec, {
   },
 });
 
+function setupSwagger(app) {
+  app.use(
+    '/api-docs',
+    (req, res, next) => {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      next();
+    },
+    swaggerUiServe,
+    swaggerUiSetup
+  );
+}
+
 module.exports = {
   swaggerSpec,
+  setupSwagger,
   swaggerUiServe,
   swaggerUiSetup,
 };
