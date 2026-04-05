@@ -16,7 +16,7 @@ const options = {
         description: "Review service direct URL",
       },
       {
-        url: process.env.SWAGGER_GATEWAY_SERVER_URL || `http://localhost:${process.env.API_GATEWAY_PORT || 8000}/api/reviews`,
+        url: process.env.SWAGGER_GATEWAY_SERVER_URL || `http://localhost:${process.env.API_GATEWAY_PORT || 8000}`,
         description: "API gateway URL for review service",
       },
     ],
